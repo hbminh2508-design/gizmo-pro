@@ -9,13 +9,9 @@ function GizmoCloud() {
   const fileInputRef = useRef(null);
 
   // ==========================================
-  // ⚠️ 1. THAY ID THƯ MỤC DRIVE CỦA BẠN VÀO ĐÂY:
+  // ⚠️ ĐÃ GIỮ NGUYÊN THÔNG TIN CỦA BẠN:
   const [currentFolderId, setCurrentFolderId] = useState('1S-KzX2Z9lRfLFEMa3VAWpLgHjV-l1e9Z'); 
-  
-  // ⚠️ 2. THAY API KEY VÀO ĐÂY:
   const API_KEY = 'AIzaSyDxyuPImrEe9RxLdsbVSSYAA3wHTrhpCWY'; 
-  
-  // ⚠️ 3. DÁN LINK WEB APP CỦA GOOGLE APPS SCRIPT VÀO ĐÂY:
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlJ3Qp36h6oDwYJ3aR45K5AqB9SQuqUrO2ElN_b3LdWVwItF3Lb5xiLSIe6DcnY3CCOQ/exec'; 
   // ==========================================
 
@@ -27,7 +23,8 @@ function GizmoCloud() {
     setLoading(true);
     try {
       const query = `'${folderId}' in parents and trashed = false`;
-      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&key=${API_KEY}&fields=files(id,name,mimeType,size,iconLink)&pageSize=100`;
+      // Bổ sung thêm 'createdTime' vào trường lấy dữ liệu từ Google Drive
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&key=${API_KEY}&fields=files(id,name,mimeType,size,iconLink,createdTime)&pageSize=100`;
       
       const response = await fetch(url);
       const data = await response.json();
@@ -71,7 +68,7 @@ function GizmoCloud() {
 
         const result = await response.json();
         if (result.status === 'success') {
-          fetchFiles(currentFolderId); // Tải lại danh sách file
+          fetchFiles(currentFolderId); // Tải lại danh sách file sau khi upload thành công
         } else {
           alert('Lỗi khi tải lên: ' + result.message);
         }
@@ -105,6 +102,19 @@ function GizmoCloud() {
     if (!bytes) return '---';
     const mb = bytes / (1024 * 1024);
     return mb > 1024 ? (mb / 1024).toFixed(2) + ' GB' : mb.toFixed(2) + ' MB';
+  };
+
+  // HÀM CHUYỂN ĐỔI THỜI GIAN CHUẨN (Thêm số 0 vào trước nếu < 10)
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '--';
+    const date = new Date(timeStr);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${hours}:${minutes} - ${day}/${month}/${year}`;
   };
 
   return (
@@ -155,11 +165,12 @@ function GizmoCloud() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-2">
-          {/* Header bảng */}
-          <div className="grid grid-cols-12 px-4 py-3 text-xs font-bold uppercase tracking-widest opacity-40 border-b border-white/10">
-            <div className="col-span-7 md:col-span-8">Tên tệp tin</div>
-            <div className="col-span-3 md:col-span-2 text-right">Kích thước</div>
-            <div className="col-span-2 text-right">Tác vụ</div>
+          {/* Header bảng - Đã điều chỉnh chia cột để thêm phần thời gian */}
+          <div className="grid grid-cols-12 px-4 py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-40 border-b border-white/10">
+            <div className="col-span-5 md:col-span-5">Tên tệp tin</div>
+            <div className="col-span-3 md:col-span-3 text-right">Ngày tải lên</div>
+            <div className="col-span-2 md:col-span-2 text-right">Size</div>
+            <div className="col-span-2 md:col-span-2 text-right">Tác vụ</div>
           </div>
 
           {/* Danh sách file */}
@@ -174,18 +185,34 @@ function GizmoCloud() {
                   className="grid grid-cols-12 px-4 py-4 rounded-2xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group items-center cursor-pointer"
                   onClick={() => isFolder && handleFolderClick(file.id, file.name)}
                 >
-                  <div className="col-span-7 md:col-span-8 flex items-center gap-4">
+                  {/* TÊN FILE */}
+                  <div className="col-span-5 md:col-span-5 flex items-center gap-3">
                     <span className="text-2xl">{isFolder ? '📂' : '📄'}</span>
-                    <span className="font-semibold truncate pr-4 group-hover:text-blue-500 transition-colors">
+                    <span className="font-semibold text-sm truncate pr-2 group-hover:text-blue-500 transition-colors">
                       {file.name}
                     </span>
                   </div>
-                  <div className="col-span-3 md:col-span-2 text-right text-sm opacity-60 font-mono">
+                  
+                  {/* CỘT THỜI GIAN MỚI THÊM */}
+                  <div className="col-span-3 md:col-span-3 text-right text-xs opacity-60">
+                    {isFolder ? '--' : formatTime(file.createdTime)}
+                  </div>
+                  
+                  {/* CỘT KÍCH THƯỚC */}
+                  <div className="col-span-2 md:col-span-2 text-right text-xs opacity-60 font-mono">
                     {isFolder ? '--' : formatSize(file.size)}
                   </div>
-                  <div className="col-span-2 text-right">
+
+                  {/* CỘT TÁC VỤ */}
+                  <div className="col-span-2 md:col-span-2 text-right">
                     {!isFolder && (
-                      <a href={`https://drive.google.com/file/d/${file.id}/view`} target="_blank" rel="noreferrer" className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-500 transition-all opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                      <a 
+                        href={`https://drive.google.com/file/d/${file.id}/view`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-500 transition-all opacity-0 group-hover:opacity-100 inline-block"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         👁️
                       </a>
                     )}

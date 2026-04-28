@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import GizmoGallery from './components/GizmoGallery';
 import GizmoCloud from './components/GizmoCloud';
-import GizmoVideo from './components/GizmoVideo'; // Component mới
+import GizmoVideo from './components/GizmoVideo';
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // 1. KHỞI TẠO DARK MODE TỪ LOCAL STORAGE (Nếu trước đó chọn dark thì lấy dark, ngược lại lấy light)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('gizmo_theme') === 'dark';
+  });
+  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); 
-  const [activeTab, setActiveTab] = useState('gallery'); // 'gallery', 'cloud', 'video'
+  const [activeTab, setActiveTab] = useState('gallery');
 
-  // KHOẢN NÀY LÀ ĐỂ LƯU LỊCH SỬ ĐĂNG NHẬP
+  // LƯU LỊCH SỬ ĐĂNG NHẬP
   useEffect(() => {
     const savedLogin = localStorage.getItem('gizmo_logged_in');
     if (savedLogin === 'true') {
@@ -17,25 +20,26 @@ function App() {
     }
   }, []);
 
+  // 2. LƯU LẠI DARK MODE MỖI KHI BẠN BẤM NÚT ĐỔI
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('gizmo_theme', 'dark'); // Lưu vào bộ nhớ trình duyệt
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('gizmo_theme', 'light');
     }
   }, [isDarkMode]);
 
-  // Hàm xử lý đăng nhập
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     setIsLoggedIn(true);
-    localStorage.setItem('gizmo_logged_in', 'true'); // Lưu vào trình duyệt
+    localStorage.setItem('gizmo_logged_in', 'true');
   };
 
-  // Hàm xử lý đăng xuất
   const handleLogout = () => {
     setIsLoggedIn(false);
-    localStorage.removeItem('gizmo_logged_in'); // Xóa khỏi trình duyệt
+    localStorage.removeItem('gizmo_logged_in');
   };
 
   return (
@@ -49,7 +53,6 @@ function App() {
       </div>
 
       {!isLoggedIn ? (
-        // GIAO DIỆN ĐĂNG NHẬP
         <div className="flex-grow flex items-center justify-center p-4">
           <div className="glass-panel p-10 rounded-[2.5rem] w-full max-w-md border-white/20 shadow-2xl animate-fade-in">
             <div className="text-center mb-10">
@@ -67,7 +70,6 @@ function App() {
           </div>
         </div>
       ) : (
-        // GIAO DIỆN TRANG CHỦ
         <div className="w-full max-w-7xl mx-auto p-6 md:p-10 flex flex-col gap-8 animate-fade-in">
           <header className="glass-panel rounded-[2rem] p-6 flex justify-between items-center border border-white/20">
             <div className="flex items-center gap-4">
@@ -83,7 +85,6 @@ function App() {
           </header>
 
           <main className="space-y-8">
-            {/* Thanh Tabs - Đã thêm mục Video */}
             <div className="flex flex-wrap gap-4 p-1.5 glass-panel rounded-2xl w-fit border border-white/10 shadow-inner">
               <button onClick={() => setActiveTab('gallery')} className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'gallery' ? 'bg-blue-600 text-white shadow-xl scale-105' : 'opacity-40 hover:opacity-100'}`}>
                 🖼️ Gallery
@@ -96,7 +97,6 @@ function App() {
               </button>
             </div>
 
-            {/* Khu vực hiển thị */}
             <div className="transition-all duration-500">
               {activeTab === 'gallery' && <GizmoGallery />}
               {activeTab === 'video' && <GizmoVideo />}

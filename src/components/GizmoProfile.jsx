@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { 
   Camera, Edit3, GraduationCap, Heart, Share2, Users, 
   UserPlus, UserCheck, Search, Check, X, Mail, Globe, 
-  Facebook, Instagram, Github, Briefcase
+  Briefcase, Code, Link
 } from 'lucide-react';
 
 function GizmoProfile({ session, isDark }) {
@@ -26,7 +26,7 @@ function GizmoProfile({ session, isDark }) {
   const [searchResult, setSearchResult] = useState(null);
   const [friends, setFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [activeSubTab, setActiveSubTab] = useState('friends'); // friends, requests, search
+  const [activeSubTab, setActiveSubTab] = useState('friends');
 
   const avatarInputRef = useRef(null);
   const coverInputRef = useRef(null);
@@ -37,14 +37,12 @@ function GizmoProfile({ session, isDark }) {
     fetchPendingRequests();
   }, []);
 
-  // 1. Fetch & Sync Profile
   const fetchProfile = async () => {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     if (data) setProfile(data);
     setLoading(false);
   };
 
-  // 2. Upload Ảnh lên Google Drive & Cập nhật Profile
   const handleImageUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -77,7 +75,6 @@ function GizmoProfile({ session, isDark }) {
     reader.readAsDataURL(file);
   };
 
-  // 3. Cập nhật thông tin chữ
   const updateInfo = async () => {
     setIsUpdating(true);
     const { error } = await supabase.from('profiles').update({
@@ -93,7 +90,6 @@ function GizmoProfile({ session, isDark }) {
     setIsUpdating(false);
   };
 
-  // 4. Friend Logic
   const fetchFriends = async () => {
     const { data } = await supabase.from('friends')
       .select('id, status, friend_id, profiles!friends_friend_id_fkey(*)')
@@ -115,15 +111,12 @@ function GizmoProfile({ session, isDark }) {
   };
 
   const acceptFriend = async (requestId, requesterId) => {
-    // Chấp nhận
     await supabase.from('friends').update({ status: 'accepted' }).eq('id', requestId);
-    // Tạo quan hệ ngược lại để cả 2 thấy nhau
     await supabase.from('friends').insert([{ user_id: user.id, friend_id: requesterId, status: 'accepted' }]);
     fetchPendingRequests();
     fetchFriends();
   };
 
-  // Theme Classes
   const cardClass = isDark ? 'bg-white/5 border-white/5' : 'bg-white border-slate-200 shadow-sm';
   const inputClass = `w-full px-4 py-2.5 rounded-xl border outline-none text-sm transition-all ${isDark ? 'bg-black/20 border-white/10 focus:border-blue-500' : 'bg-slate-50 border-slate-200 focus:border-blue-500 focus:bg-white'}`;
   const labelClass = `text-[10px] font-bold uppercase tracking-widest ml-1 mb-1 block ${isDark ? 'text-gray-500' : 'text-slate-400'}`;
@@ -132,8 +125,6 @@ function GizmoProfile({ session, isDark }) {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-      
-      {/* HEADER: COVER & AVATAR */}
       <div className={`relative rounded-[2rem] overflow-hidden border ${cardClass}`}>
         <div className="h-48 md:h-64 bg-gradient-to-r from-blue-600 to-indigo-600 relative group">
           {profile.cover_url && <img src={profile.cover_url} className="w-full h-full object-cover" alt="Cover" />}
@@ -164,7 +155,6 @@ function GizmoProfile({ session, isDark }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* CỘT TRÁI: THÔNG TIN CHI TIẾT */}
         <div className="md:col-span-2 space-y-6">
           <section className={`p-6 rounded-[2rem] border ${cardClass} space-y-4`}>
             <h3 className="text-sm font-black flex items-center gap-2"><Edit3 size={18} className="text-blue-500"/> Thông tin cá nhân</h3>
@@ -201,22 +191,21 @@ function GizmoProfile({ session, isDark }) {
             <h3 className="text-sm font-black flex items-center gap-2"><Share2 size={18} className="text-purple-500"/> Liên kết mạng xã hội</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative">
-                <Facebook size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" />
+                <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" />
                 <input type="text" placeholder="Facebook URL" value={profile.social_links?.facebook} onChange={e => setProfile({...profile, social_links: {...profile.social_links, facebook: e.target.value}})} className={`${inputClass} pl-10`} />
               </div>
               <div className="relative">
-                <Instagram size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-500" />
+                <Camera size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-500" />
                 <input type="text" placeholder="Instagram URL" value={profile.social_links?.instagram} onChange={e => setProfile({...profile, social_links: {...profile.social_links, instagram: e.target.value}})} className={`${inputClass} pl-10`} />
               </div>
               <div className="relative">
-                <Github size={16} className="absolute left-3 top-1/2 -translate-y-1/2" />
+                <Code size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input type="text" placeholder="Github URL" value={profile.social_links?.github} onChange={e => setProfile({...profile, social_links: {...profile.social_links, github: e.target.value}})} className={`${inputClass} pl-10`} />
               </div>
             </div>
           </section>
         </div>
 
-        {/* CỘT PHẢI: BẠN BÈ & KẾT NỐI */}
         <div className="md:col-span-1 space-y-6">
           <section className={`rounded-[2rem] border overflow-hidden flex flex-col h-full ${cardClass}`}>
             <div className="flex border-b border-inherit">

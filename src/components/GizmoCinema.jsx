@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Film, Play, Youtube, HardDrive, X, Plus, PlayCircle, Search, Info } from 'lucide-react';
+import { Film, Play, MonitorPlay, HardDrive, X, Plus, PlayCircle, Search, Info } from 'lucide-react';
 
 function GizmoCinema({ userEmail, isDark }) {
   const [items, setItems] = useState([]);
@@ -9,9 +9,7 @@ function GizmoCinema({ userEmail, isDark }) {
   const [ytTitle, setYtTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // ==========================================
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlJ3Qp36h6oDwYJ3aR45K5AqB9SQuqUrO2ElN_b3LdWVwItF3Lb5xiLSIe6DcnY3CCOQ/exec';
-  // ==========================================
 
   const fetchContent = async () => {
     setLoading(true);
@@ -97,15 +95,12 @@ function GizmoCinema({ userEmail, isDark }) {
     item.name.replace('ytlink_', '').replace('.txt', '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // --- THEME CLASSES ---
   const panelBg = isDark ? 'bg-white/5 border-white/5' : 'bg-white border-slate-200 shadow-sm';
   const itemHoverBg = isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50';
   const textMuted = isDark ? 'text-gray-400' : 'text-slate-500';
 
   return (
     <div className="flex flex-col h-full gap-4 p-4 animate-fade-in relative">
-      
-      {/* HEADER & FORM TÌM KIẾM/NHẬP LINK */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-red-600/10 rounded-lg text-red-600">
@@ -126,7 +121,7 @@ function GizmoCinema({ userEmail, isDark }) {
               />
             </div>
             <div className="relative flex-grow">
-              <Youtube className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${textMuted}`} size={16} />
+              <MonitorPlay className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${textMuted}`} size={16} />
               <input 
                 type="text" placeholder="Dán link YouTube..." value={ytUrl} onChange={e => setYtUrl(e.target.value)} required
                 className={`w-full pl-8 pr-3 py-2 rounded-xl border outline-none text-sm transition-all ${isDark ? 'bg-black/40 border-transparent focus:border-red-500' : 'bg-white border-slate-200 focus:border-red-400'}`}
@@ -140,8 +135,6 @@ function GizmoCinema({ userEmail, isDark }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow overflow-hidden">
-        
-        {/* DANH SÁCH VIDEO (CỘT TRÁI) */}
         <div className={`lg:col-span-1 rounded-[1.5rem] p-4 flex flex-col gap-3 border ${panelBg} overflow-hidden`}>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-xs font-bold uppercase tracking-widest ${textMuted}`}>Thư viện phim</h3>
@@ -182,7 +175,7 @@ function GizmoCinema({ userEmail, isDark }) {
                         : `border-transparent ${itemHoverBg}`}`}
                   >
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${isYoutube ? 'bg-red-100 text-red-600 dark:bg-red-600/20 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-600/20 dark:text-blue-400'}`}>
-                      {isYoutube ? <Youtube size={20} /> : <HardDrive size={20} />}
+                      {isYoutube ? <MonitorPlay size={20} /> : <HardDrive size={20} />}
                     </div>
                     <div className="truncate flex-grow">
                       <p className={`font-semibold text-sm truncate ${isSelected && !isDark ? 'text-red-700' : ''}`}>{title}</p>
@@ -198,7 +191,6 @@ function GizmoCinema({ userEmail, isDark }) {
           </div>
         </div>
 
-        {/* TRÌNH PHÁT VIDEO (CỘT PHẢI) - LUÔN LUÔN DARK ĐỂ TỐI ƯU TRẢI NGHIỆM XEM */}
         <div className="lg:col-span-2 rounded-[1.5rem] border border-white/10 bg-[#0B0F19] overflow-hidden flex flex-col items-center justify-center relative min-h-[300px] shadow-2xl">
           {!selectedVideo ? (
             <div className="text-center text-gray-500 animate-fade-in flex flex-col items-center">
@@ -207,10 +199,9 @@ function GizmoCinema({ userEmail, isDark }) {
             </div>
           ) : (
             <div className="w-full h-full flex flex-col animate-fade-in">
-              {/* Thanh Header của Player */}
               <div className="p-3 md:p-4 border-b border-white/10 flex justify-between items-center bg-black/60 backdrop-blur-md absolute top-0 left-0 right-0 z-10 opacity-0 hover:opacity-100 transition-opacity duration-300">
                 <div className="flex items-center gap-3 truncate pr-4 text-white">
-                  {selectedVideo.type === 'youtube' ? <Youtube size={18} className="text-red-500" /> : <Play size={18} className="text-blue-500" />}
+                  {selectedVideo.type === 'youtube' ? <MonitorPlay size={18} className="text-red-500" /> : <Play size={18} className="text-blue-500" />}
                   <span className="font-semibold text-sm truncate">{selectedVideo.name}</span>
                 </div>
                 <button onClick={() => setSelectedVideo(null)} className="p-2 rounded-lg bg-white/10 hover:bg-red-500 text-white transition-all">
@@ -218,7 +209,6 @@ function GizmoCinema({ userEmail, isDark }) {
                 </button>
               </div>
               
-              {/* Khu vực phát Iframe */}
               <div className="flex-grow w-full h-full bg-black relative">
                 {selectedVideo.type === 'drive' ? (
                   <iframe 

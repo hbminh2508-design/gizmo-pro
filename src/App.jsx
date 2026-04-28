@@ -9,18 +9,15 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('gizmo_theme') === 'dark');
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [authMode, setAuthMode] = useState('login'); // 'login' hoặc 'register'
-  const [activeTab, setActiveTab] = useState('chat'); // Mặc định mở tab Chat
+  const [authMode, setAuthMode] = useState('login'); 
+  const [activeTab, setActiveTab] = useState('chat'); 
 
-  // --- QUẢN LÝ PHIÊN ĐĂNG NHẬP BẰNG SUPABASE ---
   useEffect(() => {
-    // Kiểm tra session hiện tại khi mở app
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Lắng nghe sự thay đổi đăng nhập/đăng xuất
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -28,7 +25,6 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // --- QUẢN LÝ DARK MODE ---
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -39,7 +35,6 @@ function App() {
     }
   }, [isDarkMode]);
 
-  // --- HÀM ĐĂNG NHẬP / ĐĂNG KÝ ---
   const handleAuth = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
@@ -49,7 +44,7 @@ function App() {
     if (authMode === 'register') {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) alert(error.message);
-      else alert('Đăng ký thành công! Hãy kiểm tra email để xác thực.');
+      else alert('Đăng ký thành công!');
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) alert('Sai email hoặc mật khẩu!');
@@ -61,22 +56,22 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  // Nếu đang kiểm tra đăng nhập
   if (loading && !session) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Đang tải...</div>;
   }
 
   return (
-    <div className={`min-h-screen w-full flex transition-colors duration-500 overflow-hidden
+    // THAY ĐỔI QUAN TRỌNG: Dùng h-[100dvh] để fix lỗi chiều cao trên Safari iOS
+    <div className={`w-full flex transition-colors duration-500 overflow-hidden h-[100dvh]
       ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-black to-blue-900 text-white' : 'bg-gradient-to-br from-blue-50 via-white to-purple-100 text-gray-800'}`}>
       
       {!session ? (
-        // --- GIAO DIỆN ĐĂNG NHẬP MỚI ---
+        // --- GIAO DIỆN ĐĂNG NHẬP ---
         <div className="flex-grow flex items-center justify-center p-4">
-          <div className="glass-panel p-10 rounded-[2.5rem] w-full max-w-md border-white/20 shadow-2xl animate-fade-in relative">
+          <div className="glass-panel p-8 md:p-10 rounded-[2.5rem] w-full max-w-md border-white/20 shadow-2xl animate-fade-in relative">
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="absolute top-6 right-6 text-xl">{isDarkMode ? '☀️' : '🌙'}</button>
             <div className="text-center mb-10">
-              <h1 className="text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Gizmo Chat</h1>
+              <h1 className="text-4xl md:text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Gizmo Chat</h1>
               <p className="opacity-60 text-sm uppercase font-semibold">Bảo mật đa nền tảng</p>
             </div>
             
@@ -96,15 +91,32 @@ function App() {
           </div>
         </div>
       ) : (
-        // --- GIAO DIỆN APP CHÍNH (LAYOUT SIDEBAR MỚI) ---
-        <div className="flex w-full h-screen p-4 gap-4 animate-fade-in">
+        // --- GIAO DIỆN APP CHÍNH LÀM LẠI KIẾN TRÚC ---
+        <div className="flex flex-col md:flex-row w-full h-full p-2 md:p-4 gap-2 md:gap-4 animate-fade-in relative">
           
-          {/* SIDEBAR BÊN TRÁI */}
-          <aside className="w-20 md:w-64 glass-panel rounded-3xl border border-white/20 flex flex-col items-center md:items-start py-8 px-4 justify-between transition-all flex-shrink-0 shadow-xl z-10">
+          {/* 1. HEADER MOBILE (Chỉ hiện trên điện thoại) */}
+          <header className="md:hidden glass-panel rounded-2xl p-3 flex justify-between items-center z-10 flex-shrink-0 border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">G</div>
+              <h2 className="text-lg font-black">Gizmo Chat</h2>
+            </div>
+            <div className="flex items-center gap-4">
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-xl">
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+              {/* Bấm vào Avatar để đăng xuất trên Mobile */}
+              <button onClick={() => { if(window.confirm('Bạn muốn đăng xuất?')) handleLogout() }} className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold shadow-md hover:bg-red-500 transition-colors">
+                {session.user.email.substring(0, 2).toUpperCase()}
+              </button>
+            </div>
+          </header>
+
+          {/* 2. SIDEBAR DESKTOP (Chỉ hiện trên máy tính) */}
+          <aside className="hidden md:flex w-64 glass-panel rounded-3xl border border-white/20 flex-col items-start py-8 px-4 justify-between transition-all flex-shrink-0 shadow-xl z-10">
             <div className="w-full">
-              <div className="flex items-center gap-3 mb-10 px-2 justify-center md:justify-start">
+              <div className="flex items-center gap-3 mb-10 px-2 justify-start">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0">G</div>
-                <h2 className="text-xl font-bold hidden md:block tracking-tight">Gizmo Chat</h2>
+                <h2 className="text-xl font-bold tracking-tight">Gizmo Chat</h2>
               </div>
 
               <nav className="flex flex-col gap-3 w-full">
@@ -116,15 +128,15 @@ function App() {
             </div>
 
             <div className="w-full flex flex-col gap-4">
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-full p-3 rounded-xl hover:bg-white/10 transition-all flex justify-center md:justify-start items-center gap-3">
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-full p-3 rounded-xl hover:bg-white/10 transition-all flex justify-start items-center gap-3">
                 <span className="text-xl">{isDarkMode ? '☀️' : '🌙'}</span>
-                <span className="font-bold text-sm hidden md:block opacity-70">Giao diện</span>
+                <span className="font-bold text-sm opacity-70">Giao diện</span>
               </button>
-              <div className="w-full border-t border-white/10 pt-4 flex items-center gap-3 justify-center md:justify-start px-2">
+              <div className="w-full border-t border-white/10 pt-4 flex items-center gap-3 justify-start px-2">
                 <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden flex-shrink-0">
                   {session.user.email.substring(0, 2).toUpperCase()}
                 </div>
-                <div className="hidden md:block truncate">
+                <div className="truncate">
                   <p className="text-xs opacity-50 truncate w-32">{session.user.email}</p>
                   <button onClick={handleLogout} className="text-xs text-red-500 font-bold hover:underline">Đăng xuất</button>
                 </div>
@@ -132,36 +144,52 @@ function App() {
             </div>
           </aside>
 
-          {/* KHU VỰC NỘI DUNG CHÍNH */}
-          <main className="flex-grow h-full overflow-hidden glass-panel rounded-3xl border border-white/20 shadow-xl relative">
-             {/* ĐÃ TÍCH HỢP GIZMO CHAT TẠI ĐÂY */}
-             {activeTab === 'chat' && (
-                <div className="p-4 md:p-6 h-full w-full">
-                  <GizmoChat session={session} />
-                </div>
-             )}
-             
-             {/* CÁC TAB KHÁC */}
-             {activeTab === 'cloud' && <div className="p-6 h-full overflow-y-auto"><GizmoCloud userEmail={session.user.email} /></div>}
-             {activeTab === 'gallery' && <div className="p-6 h-full overflow-y-auto"><GizmoGallery /></div>}
-             {activeTab === 'video' && <div className="p-6 h-full overflow-y-auto"><GizmoVideo /></div>}
+          {/* 3. KHU VỰC NỘI DUNG CHÍNH (Dùng chung cho cả Mobile/Desktop) */}
+          <main className="flex-grow overflow-hidden glass-panel rounded-2xl md:rounded-3xl border border-white/20 shadow-xl relative z-0 flex flex-col">
+             {activeTab === 'chat' && <div className="p-2 md:p-4 h-full w-full overflow-hidden"><GizmoChat session={session} /></div>}
+             {activeTab === 'cloud' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCloud userEmail={session.user.email} /></div>}
+             {activeTab === 'gallery' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoGallery /></div>}
+             {activeTab === 'video' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoVideo /></div>}
           </main>
+
+          {/* 4. BOTTOM NAV MOBILE (Chỉ hiện trên điện thoại) */}
+          <nav className="md:hidden glass-panel rounded-2xl p-2 flex justify-around items-center z-10 flex-shrink-0 border border-white/20 pb-safe">
+            <MobileMenuButton icon="💬" label="Chat" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
+            <MobileMenuButton icon="☁️" label="Cloud" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
+            <MobileMenuButton icon="🖼️" label="Ảnh" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
+            <MobileMenuButton icon="🎬" label="Video" isActive={activeTab === 'video'} onClick={() => setActiveTab('video')} />
+          </nav>
+
         </div>
       )}
     </div>
   );
 }
 
-// Component phụ cho Nút Menu Sidebar
+// Component nút cho Desktop Sidebar
 function MenuButton({ icon, label, isActive, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`w-full p-3 rounded-2xl transition-all flex items-center gap-3 justify-center md:justify-start
+      className={`w-full p-3 rounded-2xl transition-all flex items-center gap-3 justify-start
         ${isActive ? 'bg-blue-600 text-white shadow-lg scale-105' : 'hover:bg-white/10 opacity-60 hover:opacity-100'}`}
     >
       <span className="text-xl">{icon}</span>
-      <span className="font-bold text-sm hidden md:block uppercase tracking-wider">{label}</span>
+      <span className="font-bold text-sm uppercase tracking-wider">{label}</span>
+    </button>
+  );
+}
+
+// Component nút cho Mobile Bottom Nav (Mới)
+function MobileMenuButton({ icon, label, isActive, onClick }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all w-16
+        ${isActive ? 'bg-blue-600 text-white shadow-lg -translate-y-1' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}
+    >
+      <span className="text-xl mb-1">{icon}</span>
+      <span className="text-[10px] font-bold uppercase">{label}</span>
     </button>
   );
 }

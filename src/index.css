@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Class tùy chỉnh cho hiệu ứng kính (Glassmorphism) */
+  .glass-panel {
+    @apply bg-white/40 backdrop-blur-lg border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] 
+           dark:bg-gray-900/40 dark:border-gray-700/50 dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.4)];
+  }
+}
+
+body {
+  @apply transition-colors duration-300;
+}

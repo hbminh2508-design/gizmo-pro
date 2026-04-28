@@ -4,13 +4,14 @@ import GizmoGallery from './components/GizmoGallery';
 import GizmoCloud from './components/GizmoCloud';
 import GizmoVideo from './components/GizmoVideo';
 import GizmoChat from './components/GizmoChat';
+import GizmoProfile from './components/GizmoProfile'; // THÊM IMPORT PROFILE
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('gizmo_theme') === 'dark');
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState('login'); 
-  const [activeTab, setActiveTab] = useState('chat'); 
+  const [activeTab, setActiveTab] = useState('profile'); // Tạm thời để mặc định mở Profile để bạn dễ test
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -61,7 +62,6 @@ function App() {
   }
 
   return (
-    // THAY ĐỔI QUAN TRỌNG: Dùng h-[100dvh] để fix lỗi chiều cao trên Safari iOS
     <div className={`w-full flex transition-colors duration-500 overflow-hidden h-[100dvh]
       ${isDarkMode ? 'bg-gradient-to-br from-gray-900 via-black to-blue-900 text-white' : 'bg-gradient-to-br from-blue-50 via-white to-purple-100 text-gray-800'}`}>
       
@@ -91,10 +91,10 @@ function App() {
           </div>
         </div>
       ) : (
-        // --- GIAO DIỆN APP CHÍNH LÀM LẠI KIẾN TRÚC ---
+        // --- GIAO DIỆN APP CHÍNH ---
         <div className="flex flex-col md:flex-row w-full h-full p-2 md:p-4 gap-2 md:gap-4 animate-fade-in relative">
           
-          {/* 1. HEADER MOBILE (Chỉ hiện trên điện thoại) */}
+          {/* 1. HEADER MOBILE */}
           <header className="md:hidden glass-panel rounded-2xl p-3 flex justify-between items-center z-10 flex-shrink-0 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">G</div>
@@ -104,14 +104,13 @@ function App() {
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-xl">
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-              {/* Bấm vào Avatar để đăng xuất trên Mobile */}
               <button onClick={() => { if(window.confirm('Bạn muốn đăng xuất?')) handleLogout() }} className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold shadow-md hover:bg-red-500 transition-colors">
                 {session.user.email.substring(0, 2).toUpperCase()}
               </button>
             </div>
           </header>
 
-          {/* 2. SIDEBAR DESKTOP (Chỉ hiện trên máy tính) */}
+          {/* 2. SIDEBAR DESKTOP */}
           <aside className="hidden md:flex w-64 glass-panel rounded-3xl border border-white/20 flex-col items-start py-8 px-4 justify-between transition-all flex-shrink-0 shadow-xl z-10">
             <div className="w-full">
               <div className="flex items-center gap-3 mb-10 px-2 justify-start">
@@ -120,6 +119,8 @@ function App() {
               </div>
 
               <nav className="flex flex-col gap-3 w-full">
+                {/* ĐÃ THÊM TAB PROFILE VÀO ĐÂY */}
+                <MenuButton icon="👤" label="Cá Nhân" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
                 <MenuButton icon="💬" label="Nhắn Tin" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
                 <MenuButton icon="☁️" label="Cloud Drive" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
                 <MenuButton icon="🖼️" label="Gallery" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
@@ -144,16 +145,20 @@ function App() {
             </div>
           </aside>
 
-          {/* 3. KHU VỰC NỘI DUNG CHÍNH (Dùng chung cho cả Mobile/Desktop) */}
+          {/* 3. KHU VỰC NỘI DUNG CHÍNH */}
           <main className="flex-grow overflow-hidden glass-panel rounded-2xl md:rounded-3xl border border-white/20 shadow-xl relative z-0 flex flex-col">
+             {/* ĐÃ THÊM RENDER CHO GIZMO PROFILE TẠI ĐÂY */}
+             {activeTab === 'profile' && <div className="p-2 md:p-6 h-full w-full overflow-y-auto"><GizmoProfile session={session} /></div>}
              {activeTab === 'chat' && <div className="p-2 md:p-4 h-full w-full overflow-hidden"><GizmoChat session={session} /></div>}
              {activeTab === 'cloud' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCloud userEmail={session.user.email} /></div>}
              {activeTab === 'gallery' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoGallery /></div>}
              {activeTab === 'video' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoVideo /></div>}
           </main>
 
-          {/* 4. BOTTOM NAV MOBILE (Chỉ hiện trên điện thoại) */}
+          {/* 4. BOTTOM NAV MOBILE */}
           <nav className="md:hidden glass-panel rounded-2xl p-2 flex justify-around items-center z-10 flex-shrink-0 border border-white/20 pb-safe">
+            {/* ĐÃ THÊM TAB PROFILE VÀO ĐÂY */}
+            <MobileMenuButton icon="👤" label="Tôi" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
             <MobileMenuButton icon="💬" label="Chat" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
             <MobileMenuButton icon="☁️" label="Cloud" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
             <MobileMenuButton icon="🖼️" label="Ảnh" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
@@ -180,7 +185,7 @@ function MenuButton({ icon, label, isActive, onClick }) {
   );
 }
 
-// Component nút cho Mobile Bottom Nav (Mới)
+// Component nút cho Mobile Bottom Nav
 function MobileMenuButton({ icon, label, isActive, onClick }) {
   return (
     <button 

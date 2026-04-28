@@ -6,7 +6,7 @@ function GizmoGallery() {
 
   // ⚠️ THAY THẾ BẰNG KEY VÀ ID CỦA BẠN
   const API_KEY = 'AIzaSyDxyuPImrEe9RxLdsbVSSYAA3wHTrhpCWY';
-  const FOLDER_ID = 'AIzaSyDxyuPImrEe9RxLdsbVSSYAA3wHTrhpCWY';
+  const FOLDER_ID = '1S-KzX2Z9lRfLFEMa3VAWpLgHjV-l1e9Z';
 
   useEffect(() => {
     // Gọi API của Google Drive để lấy danh sách file trong thư mục

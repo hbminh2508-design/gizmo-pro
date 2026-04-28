@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import GizmoProfile from './components/GizmoProfile';
-import GizmoCloudV2 from './components/GizmoCloudV2'; // BẢN CẬP NHẬT ĐÁM MÂY CÁ NHÂN
-import GizmoChatV2 from './components/GizmoChatV2';   // BẢN CẬP NHẬT QUẢN LÝ PHÒNG CHAT
+import GizmoCloudV2 from './components/GizmoCloudV2'; 
+import GizmoChatV2 from './components/GizmoChatV2';   
+import GizmoCinema from './components/GizmoCinema'; // THÊM IMPORT CINEMA
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('gizmo_theme') === 'dark');
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState('login'); 
-  const [activeTab, setActiveTab] = useState('chat'); // Mở Tab Chat làm mặc định để dễ test
+  const [activeTab, setActiveTab] = useState('cinema'); // Mở Tab Cinema làm mặc định để test
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -120,7 +121,7 @@ function App() {
                 <MenuButton icon="👤" label="Cá Nhân" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
                 <MenuButton icon="💬" label="Nhắn Tin" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
                 <MenuButton icon="☁️" label="Cloud Riêng" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
-                {/* Đã xóa Video và Gallery để đảm bảo bảo mật */}
+                <MenuButton icon="🎬" label="Cinema" isActive={activeTab === 'cinema'} onClick={() => setActiveTab('cinema')} /> {/* TAB MỚI */}
               </nav>
             </div>
 
@@ -146,6 +147,7 @@ function App() {
              {activeTab === 'profile' && <div className="p-2 md:p-6 h-full w-full overflow-y-auto"><GizmoProfile session={session} /></div>}
              {activeTab === 'chat' && <div className="p-2 md:p-4 h-full w-full overflow-hidden"><GizmoChatV2 session={session} /></div>}
              {activeTab === 'cloud' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCloudV2 userEmail={session.user.email} /></div>}
+             {activeTab === 'cinema' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCinema userEmail={session.user.email} /></div>} {/* RENDER CINEMA */}
           </main>
 
           {/* 4. BOTTOM NAV MOBILE */}
@@ -153,6 +155,7 @@ function App() {
             <MobileMenuButton icon="👤" label="Tôi" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
             <MobileMenuButton icon="💬" label="Chat" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
             <MobileMenuButton icon="☁️" label="Cloud" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
+            <MobileMenuButton icon="🎬" label="Phim" isActive={activeTab === 'cinema'} onClick={() => setActiveTab('cinema')} /> {/* TAB MỚI */}
           </nav>
 
         </div>
@@ -180,7 +183,7 @@ function MobileMenuButton({ icon, label, isActive, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all w-20
+      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all w-16
         ${isActive ? 'bg-blue-600 text-white shadow-lg -translate-y-1' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}
     >
       <span className="text-xl mb-1">{icon}</span>

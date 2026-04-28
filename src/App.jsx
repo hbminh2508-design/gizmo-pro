@@ -9,7 +9,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState('login'); 
-  const [activeTab, setActiveTab] = useState('chat'); // Mặc định mở tab Chat
+  const [activeTab, setActiveTab] = useState('chat'); // Mở Tab Chat làm mặc định để dễ test
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

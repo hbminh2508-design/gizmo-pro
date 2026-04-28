@@ -454,3 +454,5 @@
 	"modelVersionId": 4,
 	"origin": "extHost2"
 }]
+
+export default App;

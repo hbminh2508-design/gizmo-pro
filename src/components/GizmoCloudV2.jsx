@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Cloud, Upload, File, Folder, Eye, HardDrive, Search, MoreVertical, FileText, ImageIcon, Film, AlertCircle } from 'lucide-react';
+import { Cloud, Upload, File, Folder, Eye, MoreVertical, FileText, ImageIcon, Film, AlertCircle, Search } from 'lucide-react';
 
 function GizmoCloudV2({ userEmail, isDark }) {
   const [files, setFiles] = useState([]);
@@ -9,9 +9,7 @@ function GizmoCloudV2({ userEmail, isDark }) {
 
   const fileInputRef = useRef(null);
 
-  // ==========================================
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlJ3Qp36h6oDwYJ3aR45K5AqB9SQuqUrO2ElN_b3LdWVwItF3Lb5xiLSIe6DcnY3CCOQ/exec'; 
-  // ==========================================
 
   const fetchMyFiles = async () => {
     setLoading(true);
@@ -92,14 +90,11 @@ function GizmoCloudV2({ userEmail, isDark }) {
 
   const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  // --- THEME CLASSES ---
-  const cardBg = isDark ? 'bg-white/5 border-white/5' : 'bg-white border-slate-200 shadow-sm';
   const textMuted = isDark ? 'text-gray-400' : 'text-slate-500';
 
   return (
     <div className="p-4 md:p-8 h-full flex flex-col animate-fade-in relative">
       
-      {/* OVERLAY KHI ĐANG UPLOAD */}
       {isUploading && (
         <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md flex flex-col items-center justify-center text-white">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -107,8 +102,7 @@ function GizmoCloudV2({ userEmail, isDark }) {
         </div>
       )}
 
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 flex-shrink-0">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="p-2 bg-blue-600/10 rounded-lg text-blue-600">
@@ -144,25 +138,6 @@ function GizmoCloudV2({ userEmail, isDark }) {
         </div>
       </div>
 
-      {/* STORAGE OVERVIEW (GIẢ LẬP) */}
-      <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-8`}>
-        <div className={`p-4 rounded-2xl border ${cardBg} flex items-center gap-4`}>
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><HardDrive size={20}/></div>
-          <div>
-            <p className={`text-[10px] font-bold uppercase tracking-wider ${textMuted}`}>Dung lượng sử dụng</p>
-            <p className="text-sm font-black">5.2 GB / 5 TB</p>
-          </div>
-        </div>
-        <div className={`p-4 rounded-2xl border ${cardBg} flex items-center gap-4`}>
-          <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500"><File size={20}/></div>
-          <div>
-            <p className={`text-[10px] font-bold uppercase tracking-wider ${textMuted}`}>Tổng số tệp</p>
-            <p className="text-sm font-black">{files.length} Tệp tin</p>
-          </div>
-        </div>
-      </div>
-
-      {/* FILE LIST TABLE */}
       <div className={`flex-grow overflow-hidden rounded-2xl border flex flex-col ${isDark ? 'bg-black/20 border-white/5' : 'bg-white border-slate-200'}`}>
         <div className={`grid grid-cols-12 px-5 py-3 border-b text-[10px] font-bold uppercase tracking-widest ${isDark ? 'border-white/5 bg-white/5' : 'bg-slate-50 border-slate-200'} ${textMuted}`}>
           <div className="col-span-7 md:col-span-6">Tên tệp tin</div>
@@ -222,7 +197,7 @@ function GizmoCloudV2({ userEmail, isDark }) {
       <div className={`mt-4 p-4 rounded-xl border flex items-start gap-3 ${isDark ? 'bg-blue-500/5 border-blue-500/10' : 'bg-blue-50 border-blue-100'}`}>
         <AlertCircle size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
         <p className="text-[11px] leading-relaxed opacity-70">
-          <b>Bảo mật 100%:</b> Dữ liệu trên đây được lưu trữ trong không gian riêng biệt của bạn. Hệ thống Gizmo Cloud không chia sẻ dữ liệu giữa các người dùng khác nhau.
+          <b>Bảo mật 100%:</b> Dữ liệu trên đây được lưu trữ trong không gian riêng biệt của bạn.
         </p>
       </div>
     </div>

@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import GizmoGallery from './components/GizmoGallery';
-import GizmoCloud from './components/GizmoCloud';
-import GizmoVideo from './components/GizmoVideo';
-import GizmoChat from './components/GizmoChat';
-import GizmoProfile from './components/GizmoProfile'; // THÊM IMPORT PROFILE
+import GizmoProfile from './components/GizmoProfile';
+import GizmoCloudV2 from './components/GizmoCloudV2'; // BẢN CẬP NHẬT ĐÁM MÂY CÁ NHÂN
+import GizmoChatV2 from './components/GizmoChatV2';   // BẢN CẬP NHẬT QUẢN LÝ PHÒNG CHAT
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('gizmo_theme') === 'dark');
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authMode, setAuthMode] = useState('login'); 
-  const [activeTab, setActiveTab] = useState('profile'); // Tạm thời để mặc định mở Profile để bạn dễ test
+  const [activeTab, setActiveTab] = useState('chat'); // Mặc định mở tab Chat
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -119,12 +117,10 @@ function App() {
               </div>
 
               <nav className="flex flex-col gap-3 w-full">
-                {/* ĐÃ THÊM TAB PROFILE VÀO ĐÂY */}
                 <MenuButton icon="👤" label="Cá Nhân" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
                 <MenuButton icon="💬" label="Nhắn Tin" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
-                <MenuButton icon="☁️" label="Cloud Drive" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
-                <MenuButton icon="🖼️" label="Gallery" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
-                <MenuButton icon="🎬" label="Video" isActive={activeTab === 'video'} onClick={() => setActiveTab('video')} />
+                <MenuButton icon="☁️" label="Cloud Riêng" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
+                {/* Đã xóa Video và Gallery để đảm bảo bảo mật */}
               </nav>
             </div>
 
@@ -147,22 +143,16 @@ function App() {
 
           {/* 3. KHU VỰC NỘI DUNG CHÍNH */}
           <main className="flex-grow overflow-hidden glass-panel rounded-2xl md:rounded-3xl border border-white/20 shadow-xl relative z-0 flex flex-col">
-             {/* ĐÃ THÊM RENDER CHO GIZMO PROFILE TẠI ĐÂY */}
              {activeTab === 'profile' && <div className="p-2 md:p-6 h-full w-full overflow-y-auto"><GizmoProfile session={session} /></div>}
-             {activeTab === 'chat' && <div className="p-2 md:p-4 h-full w-full overflow-hidden"><GizmoChat session={session} /></div>}
-             {activeTab === 'cloud' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCloud userEmail={session.user.email} /></div>}
-             {activeTab === 'gallery' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoGallery /></div>}
-             {activeTab === 'video' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoVideo /></div>}
+             {activeTab === 'chat' && <div className="p-2 md:p-4 h-full w-full overflow-hidden"><GizmoChatV2 session={session} /></div>}
+             {activeTab === 'cloud' && <div className="p-4 md:p-6 h-full overflow-y-auto"><GizmoCloudV2 userEmail={session.user.email} /></div>}
           </main>
 
           {/* 4. BOTTOM NAV MOBILE */}
           <nav className="md:hidden glass-panel rounded-2xl p-2 flex justify-around items-center z-10 flex-shrink-0 border border-white/20 pb-safe">
-            {/* ĐÃ THÊM TAB PROFILE VÀO ĐÂY */}
             <MobileMenuButton icon="👤" label="Tôi" isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
             <MobileMenuButton icon="💬" label="Chat" isActive={activeTab === 'chat'} onClick={() => setActiveTab('chat')} />
             <MobileMenuButton icon="☁️" label="Cloud" isActive={activeTab === 'cloud'} onClick={() => setActiveTab('cloud')} />
-            <MobileMenuButton icon="🖼️" label="Ảnh" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
-            <MobileMenuButton icon="🎬" label="Video" isActive={activeTab === 'video'} onClick={() => setActiveTab('video')} />
           </nav>
 
         </div>
@@ -190,7 +180,7 @@ function MobileMenuButton({ icon, label, isActive, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all w-16
+      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all w-20
         ${isActive ? 'bg-blue-600 text-white shadow-lg -translate-y-1' : 'opacity-60 hover:opacity-100 hover:bg-white/10'}`}
     >
       <span className="text-xl mb-1">{icon}</span>

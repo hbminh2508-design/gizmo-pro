@@ -1,50 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // Nhận userEmail từ App.jsx truyền vào
-function GizmoCloud({ userEmail }) {
+function GizmoCloudV2({ userEmail }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [folderHistory, setFolderHistory] = useState([]); 
 
   const fileInputRef = useRef(null);
 
   // ==========================================
-  // ⚠️ ĐÃ GIỮ NGUYÊN THÔNG TIN CỦA BẠN:
-  const [currentFolderId, setCurrentFolderId] = useState('1S-KzX2Z9lRfLFEMa3VAWpLgHjV-l1e9Z'); 
-  const API_KEY = 'AIzaSyDxyuPImrEe9RxLdsbVSSYAA3wHTrhpCWY'; 
+  // ⚠️ LINK SCRIPT CỦA BẠN (Đã loại bỏ API KEY để bảo mật 100%)
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlJ3Qp36h6oDwYJ3aR45K5AqB9SQuqUrO2ElN_b3LdWVwItF3Lb5xiLSIe6DcnY3CCOQ/exec'; 
   // ==========================================
 
   useEffect(() => {
-    fetchFiles(currentFolderId);
-  }, [currentFolderId]);
+    if (userEmail) {
+      fetchMyFiles();
+    }
+  }, [userEmail]);
 
-  const fetchFiles = async (folderId) => {
+  // --- LẤY DANH SÁCH FILE THÔNG QUA APPS SCRIPT ---
+  const fetchMyFiles = async () => {
     setLoading(true);
     try {
-      const query = `'${folderId}' in parents and trashed = false`;
-      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&key=${API_KEY}&fields=files(id,name,mimeType,size,iconLink,createdTime)&pageSize=100`;
-      
-      const response = await fetch(url);
+      // Gửi request GET kèm theo userEmail để Script trả về đúng file của người này
+      const response = await fetch(`${SCRIPT_URL}?userEmail=${encodeURIComponent(userEmail)}`);
       const data = await response.json();
       
-      if (data.files) {
-        const sortedFiles = data.files.sort((a, b) => {
+      if (Array.isArray(data)) {
+        // Sắp xếp thư mục lên trên, file xuống dưới
+        const sortedFiles = data.sort((a, b) => {
           const isAFolder = a.mimeType === 'application/vnd.google-apps.folder';
           const isBFolder = b.mimeType === 'application/vnd.google-apps.folder';
           return isBFolder - isAFolder;
         });
         setFiles(sortedFiles);
+      } else {
+        setFiles([]);
       }
-      setLoading(false);
     } catch (error) {
-      console.error("Lỗi Gizmo Cloud:", error);
+      console.error("Lỗi Gizmo Cloud V2:", error);
+    } finally {
       setLoading(false);
     }
   };
 
-  // --- LOGIC UPLOAD FILE TỪ WEB LÊN GOOGLE DRIVE (TẠO THƯ MỤC RIÊNG) ---
+  // --- LOGIC UPLOAD FILE TỪ WEB LÊN GOOGLE DRIVE (VÀO THƯ MỤC CÁ NHÂN) ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -60,7 +61,7 @@ function GizmoCloud({ userEmail }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
-            userEmail: userEmail || 'guest', // Gửi email để tạo thư mục riêng biệt
+            userEmail: userEmail || 'guest', // Gửi email để Apps Script biết lưu vào đâu
             fileName: file.name,
             mimeType: file.type,
             fileData: base64Data
@@ -69,7 +70,7 @@ function GizmoCloud({ userEmail }) {
 
         const result = await response.json();
         if (result.status === 'success') {
-          fetchFiles(currentFolderId); 
+          fetchMyFiles(); // Tải lại danh sách file sau khi upload thành công
         } else {
           alert('Lỗi khi tải lên: ' + result.message);
         }
@@ -85,20 +86,7 @@ function GizmoCloud({ userEmail }) {
     reader.readAsDataURL(file);
   };
 
-  // --- CÁC HÀM TIỆN ÍCH ---
-  const handleFolderClick = (id, name) => {
-    setFolderHistory([...folderHistory, { id: currentFolderId, name: "Back" }]);
-    setCurrentFolderId(id);
-  };
-
-  const goBack = () => {
-    const previous = folderHistory.pop();
-    if (previous) {
-      setFolderHistory([...folderHistory]);
-      setCurrentFolderId(previous.id);
-    }
-  };
-
+  // --- CÁC HÀM TIỆN ÍCH HIỂN THỊ ---
   const formatSize = (bytes) => {
     if (!bytes) return '---';
     const mb = bytes / (1024 * 1024);
@@ -118,31 +106,27 @@ function GizmoCloud({ userEmail }) {
   };
 
   return (
-    <div className="w-full h-full glass-panel rounded-[2.5rem] p-8 border border-white/20 shadow-2xl relative overflow-hidden flex flex-col">
+    <div className="w-full h-full p-2 md:p-6 flex flex-col relative overflow-hidden animate-fade-in">
       
+      {/* Màn hình chờ khi đang tải file lên */}
       {isUploading && (
         <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center text-white rounded-[2.5rem]">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <h3 className="text-xl font-bold animate-pulse">Đang đẩy file lên Mây...</h3>
-          <p className="opacity-70 text-sm">Vui lòng không đóng trình duyệt</p>
+          <h3 className="text-xl font-bold animate-pulse">Đang đẩy file lên Mây riêng...</h3>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 flex-shrink-0">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 flex-shrink-0">
         <div>
           <h2 className="text-3xl font-black flex items-center gap-3">
-            <span className="text-blue-500">☁️</span> Gizmo Cloud
+            <span className="text-blue-500">☁️</span> Gizmo Private Cloud
           </h2>
-          <p className="text-sm opacity-50 font-medium">Lưu trữ bảo mật cá nhân</p>
+          <p className="text-sm opacity-50 font-medium">Không gian lưu trữ cá nhân được mã hóa</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          {folderHistory.length > 0 && (
-            <button onClick={goBack} className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-sm font-bold border border-white/10 flex-shrink-0">
-              ← Quay lại
-            </button>
-          )}
-
+        <div className="flex items-center w-full md:w-auto">
+          {/* NÚT UPLOAD FILE */}
           <div className="relative w-full md:w-auto">
             <input 
               type="file" 
@@ -157,6 +141,7 @@ function GizmoCloud({ userEmail }) {
         </div>
       </div>
 
+      {/* Danh sách File */}
       {loading ? (
         <div className="flex-grow flex justify-center items-center">
           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -164,49 +149,56 @@ function GizmoCloud({ userEmail }) {
       ) : (
         <div className="flex-grow overflow-y-auto pr-2">
           <div className="grid grid-cols-1 gap-2">
+            {/* Header bảng */}
             <div className="grid grid-cols-12 px-4 py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-40 border-b border-white/10 sticky top-0 bg-inherit z-10 backdrop-blur-md">
-              <div className="col-span-5 md:col-span-5">Tên tệp tin</div>
+              <div className="col-span-6 md:col-span-5">Tên tệp tin</div>
               <div className="col-span-3 md:col-span-3 text-right">Ngày tải lên</div>
-              <div className="col-span-2 md:col-span-2 text-right">Size</div>
-              <div className="col-span-2 md:col-span-2 text-right">Tác vụ</div>
+              <div className="col-span-3 md:col-span-2 text-right hidden md:block">Size</div>
+              <div className="col-span-3 md:col-span-2 text-right">Tác vụ</div>
             </div>
 
+            {/* Render Files */}
             {files.length === 0 ? (
-              <p className="text-center py-10 opacity-50 italic">Thư mục này trống</p>
+              <div className="text-center py-20 opacity-50 flex flex-col items-center gap-2">
+                <span className="text-4xl">📂</span>
+                <p className="italic">Đám mây của bạn đang trống</p>
+              </div>
             ) : (
               files.map((file) => {
                 const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
                 return (
                   <div 
                     key={file.id}
-                    className="grid grid-cols-12 px-4 py-4 rounded-2xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group items-center cursor-pointer"
-                    onClick={() => isFolder && handleFolderClick(file.id, file.name)}
+                    className="grid grid-cols-12 px-4 py-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all items-center"
                   >
-                    <div className="col-span-5 md:col-span-5 flex items-center gap-3">
-                      <span className="text-2xl">{isFolder ? '📂' : '📄'}</span>
-                      <span className="font-semibold text-sm truncate pr-2 group-hover:text-blue-500 transition-colors">
+                    {/* TÊN FILE */}
+                    <div className="col-span-6 md:col-span-5 flex items-center gap-3">
+                      <span className="text-2xl flex-shrink-0">{isFolder ? '📂' : '📄'}</span>
+                      <span className="font-semibold text-sm truncate pr-2">
                         {file.name}
                       </span>
                     </div>
                     
-                    <div className="col-span-3 md:col-span-3 text-right text-xs opacity-60">
+                    {/* THỜI GIAN */}
+                    <div className="col-span-3 md:col-span-3 text-right text-[10px] md:text-xs opacity-60">
                       {isFolder ? '--' : formatTime(file.createdTime)}
                     </div>
                     
-                    <div className="col-span-2 md:col-span-2 text-right text-xs opacity-60 font-mono">
+                    {/* KÍCH THƯỚC (Ẩn trên mobile cho gọn) */}
+                    <div className="hidden md:block col-span-2 text-right text-xs opacity-60 font-mono">
                       {isFolder ? '--' : formatSize(file.size)}
                     </div>
 
-                    <div className="col-span-2 md:col-span-2 text-right">
+                    {/* TÁC VỤ */}
+                    <div className="col-span-3 md:col-span-2 text-right flex justify-end">
                       {!isFolder && (
                         <a 
                           href={`https://drive.google.com/file/d/${file.id}/view`} 
                           target="_blank" 
                           rel="noreferrer"
-                          className="p-2 rounded-lg hover:bg-blue-500/20 text-blue-500 transition-all opacity-0 group-hover:opacity-100 inline-block"
-                          onClick={(e) => e.stopPropagation()}
+                          className="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-500 hover:bg-blue-500 hover:text-white font-bold text-xs transition-all flex items-center gap-1"
                         >
-                          👁️
+                          👁️ <span className="hidden sm:inline">Xem</span>
                         </a>
                       )}
                     </div>
@@ -217,8 +209,12 @@ function GizmoCloud({ userEmail }) {
           </div>
         </div>
       )}
+      
+      <p className="mt-4 text-[10px] opacity-40 italic text-center">
+        🔒 Không gian riêng tư được mã hóa. Chỉ bạn ({userEmail}) mới có thể thấy và truy cập các tệp tin này.
+      </p>
     </div>
   );
 }
 
-export default GizmoCloud;
+export default GizmoCloudV2;
